@@ -139,7 +139,7 @@ if st.session_state.load_items:
     total_kwh_night_sum = total_wh_night_sum / 1000
     total_kwh_all_day = total_kwh_day_sum + total_kwh_night_sum
 
-    # 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า
+    # 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า (เวอร์ชัน Clean สบายตา ไม่รก)
     st.markdown("##### 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า")
     
     max_connected_load = max(total_w_day, total_w_night)
@@ -203,8 +203,6 @@ model_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#66666
 
 gen_ongrid_month_str = "---"
 gen_hybrid_month_str = "---"
-grid_cost_ongrid_str = "---"
-grid_cost_hybrid_str = "---"
 save_ongrid_month_str = "---"
 save_hybrid_month_str = "---"
 price_ongrid_str = "---"
@@ -239,14 +237,6 @@ if st.session_state.calculated and st.session_state.load_items:
     gen_ongrid_month_str = f"{gen_ongrid_month:.2f} หน่วย / เดือน"
     gen_hybrid_month_str = f"{gen_hybrid_month:.2f} หน่วย / เดือน"
 
-    # ⚡ [คำนวณเพิ่มช่อง]: กรณีจ่ายไฟจากการไฟฟ้า (Grid) ปกติรายเดือนตามสัดส่วนอุปกรณ์ช่วงนั้นๆ
-    grid_cost_ongrid_month = (kwh_day * DAYS_PER_MONTH) * cost_per_unit
-    grid_cost_hybrid_month = (total_kwh_day * DAYS_PER_MONTH) * cost_per_unit
-    
-    grid_cost_ongrid_str = f"{grid_cost_ongrid_month:,.2f} บาท / เดือน"
-    grid_cost_hybrid_str = f"{grid_cost_hybrid_month:,.2f} บาท / เดือน"
-
-    # มูลค่าที่ประหยัดได้ต่อเดือน
     save_ongrid_month = gen_ongrid_month * cost_per_unit
     save_hybrid_month_base = gen_hybrid_month * cost_per_unit
     
@@ -296,8 +286,7 @@ with dash_col1:
     st.write(f"- B. ขนาดรุ่นของระบบที่แนะนำขาย: ", unsafe_allow_html=True)
     st.markdown(model_ongrid_html, unsafe_allow_html=True)
     st.markdown(f"- **ปริมาณไฟฟ้าที่คาดว่าผลิตได้จริง:** `{gen_ongrid_month_str}`")
-    st.markdown(f"- **🔴 หากใช้ไฟจาก Grid ปกติค่าน้ำไฟเดิม:** `{grid_cost_ongrid_str}`")
-    st.markdown(f"- **🟢 มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_ongrid_month_str}`")
+    st.markdown(f"- **มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_ongrid_month_str}`")
     st.markdown(f"- **ราคาขายสุทธิของระบบ:** ` {price_ongrid_str} `")
     st.write(f"- **ระยะเวลาคืนทุนโดยประมาณ:**")
     st.markdown(payback_ongrid_html, unsafe_allow_html=True)
@@ -310,8 +299,7 @@ with dash_col2:
     st.markdown(model_hybrid_html, unsafe_allow_html=True)
     st.markdown(f"- _ตัวเลือกขนาดแบตเตอรี่ที่ระบุ:_ *{battery_option if st.session_state.calculated else '---'}*")
     st.markdown(f"- **ปริมาณไฟฟ้าที่คาดว่าผลิตได้จริง:** `{gen_hybrid_month_str}`")
-    st.markdown(f"- **🔴 หากใช้ไฟจาก Grid ปกติค่าน้ำไฟเดิม:** `{grid_cost_hybrid_str}`")
-    st.markdown(f"- **🟢 มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_hybrid_month_str}` *(รวมมูลค่าเพิ่มจากแบตแล้ว)*")
+    st.markdown(f"- **มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_hybrid_month_str}` *(รวมมูลค่าเพิ่มจากแบตแล้ว)*")
     st.markdown(f"- **ราคาขายสุทธิของระบบ:** ` {price_hybrid_str} `")
     st.write(f"- **ระยะเวลาคืนทุนโดยประมาณ:**")
     st.markdown(payback_hybrid_html, unsafe_allow_html=True)
