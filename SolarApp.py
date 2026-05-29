@@ -127,7 +127,6 @@ if st.session_state.load_items:
                 st.session_state.calculated = False
                 st.rerun()
 
-        # ✨ แก้ไขตรรกะวัตต์รวม Connected Load ในแต่ละช่วงเวลาให้ถูกต้องแม่นยำตามจริง
         if item['ใช้งานกลางวัน (ชม.)'] > 0:
             total_w_day += (item['กำลังไฟฟ้า (วัตต์)'] * item['จำนวน (เครื่อง)'])
         if item['ใช้งานกลางคืน (ชม.)'] > 0:
@@ -140,14 +139,26 @@ if st.session_state.load_items:
     total_kwh_night_sum = total_wh_night_sum / 1000
     total_kwh_all_day = total_kwh_day_sum + total_kwh_night_sum
 
-    st.markdown("##### 📊 สรุปกำลังไฟฟ้าที่เลือกใช้งานรวมทั้งหมด")
+    # ✨ [จุดจัดกลุ่มใหม่ให้ถูกต้องและไร้ความซ้ำซ้อนตามหลักวิศวกรรมไฟฟ้า]
+    st.markdown("##### 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า")
+    
+    # ดึงค่า Connected Load สูงสุดออกมาบรรทัดเดียวชัดๆ ไม่เอาวัตต์ไปวางปนกลางวัน/กลางคืนให้ซ้ำซ้อน
+    max_connected_load = max(total_w_day, total_w_night)
+    st.metric(
+        label="🔌 ขนาดกำลังไฟฟ้ารวมของอุปกรณ์ไฟฟ้าที่เปิดใช้งานพร้อมกันพีกสูงสุด (Connected Load)", 
+        value=f"{max_connected_load:,} วัตต์"
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # แสดงตัวเลขพลังงานไฟฟ้าสะสมจริงเป็นรายช่วงเวลา 3 กล่องเรียงกัน สบายตาขึ้นมาก
     sum_col1, sum_col2, sum_col3 = st.columns(3)
     with sum_col1:
-        st.warning(f"☀️ **ตอนกลางวัน:** \n- กำลังไฟฟ้ารวมอุปกรณ์ที่เปิด: `{total_w_day:,} วัตต์` \n- พลังงานที่ใช้สะสม: `{total_kwh_day_sum:.2f} หน่วย / วัน`")
+        st.warning(f"☀️ **ปริมาณการใช้ไฟช่วงกลางวัน**\n\n`{total_kwh_day_sum:.2f} หน่วย / วัน`\n\n*(สัดส่วนฐานคํานวณ On-Grid)*")
     with sum_col2:
-        st.info(f"🌙 **ตอนกลางคืน:** \n- กำลังไฟฟ้ารวมอุปกรณ์ที่เปิด: `{total_w_night:,} วัตต์` \n- พลังงานที่ใช้สะสม: `{total_kwh_night_sum:.2f} หน่วย / วัน`")
+        st.info(f"🌙 **ปริมาณการใช้ไฟช่วงกลางคืน**\n\n`{total_kwh_night_sum:.2f} หน่วย / วัน`\n\n*(สัดส่วนฐานคํานวณระบบชาร์จแบต)*")
     with sum_col3:
-        st.success(f"🔋 **รวมทั้งวัน:** \n- พลังงานรวมสุทธิ: `{total_kwh_all_day:.2f} หน่วย / วัน` \n- พลังงานรวมรายวันสะสม: `{total_wh_day_sum + total_wh_night_sum:,} Wh/วัน`")
+        st.success(f"🔋 **ปริมาณการใช้ไฟรวมทั้งวัน**\n\n`{total_kwh_all_day:.2f} หน่วย / วัน`\n\n*(คิดเป็น {total_wh_day_sum + total_wh_night_sum:,} Wh/วัน)*")
                 
     st.markdown("---")
     if st.button("🗑️ ล้างรายการทั้งหมด", type="secondary"):
