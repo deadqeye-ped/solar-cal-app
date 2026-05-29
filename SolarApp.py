@@ -61,7 +61,7 @@ DAYS_PER_MONTH = 30
 
 # ----------------- 2. ออกแบบหน้าตาแอป (UI & Inputs) -----------------
 
-st.title("☀️ ระบบวิเคราะห์ขนาดและคำนวณการลงทุน Solar Cell by WRC")
+st.title("☀️ ระบบวิเคราะห์ขนาดและคำนวณการลงทุน Solar Cell by WRC Energy ☀️")
 st.markdown("---")
 
 st.subheader("1. โปรแกรมคำนวณโหลดไฟฟ้าแยกช่วงเวลา")
