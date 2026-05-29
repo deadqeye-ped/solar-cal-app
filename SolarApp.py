@@ -127,6 +127,7 @@ if st.session_state.load_items:
                 st.session_state.calculated = False
                 st.rerun()
 
+        # ✨ แก้ไขตรรกะวัตต์รวม Connected Load ในแต่ละช่วงเวลาให้ถูกต้องแม่นยำตามจริง
         if item['ใช้งานกลางวัน (ชม.)'] > 0:
             total_w_day += (item['กำลังไฟฟ้า (วัตต์)'] * item['จำนวน (เครื่อง)'])
         if item['ใช้งานกลางคืน (ชม.)'] > 0:
@@ -142,11 +143,11 @@ if st.session_state.load_items:
     st.markdown("##### 📊 สรุปกำลังไฟฟ้าที่เลือกใช้งานรวมทั้งหมด")
     sum_col1, sum_col2, sum_col3 = st.columns(3)
     with sum_col1:
-        st.warning(f"☀️ **ตอนกลางวัน:** \n- กำลังไฟฟ้ารวม: `{total_w_day:,} วัตต์` \n- พลังงานที่ใช้: `{total_kwh_day_sum:.2f} หน่วย / วัน`")
+        st.warning(f"☀️ **ตอนกลางวัน:** \n- กำลังไฟฟ้ารวมอุปกรณ์ที่เปิด: `{total_w_day:,} วัตต์` \n- พลังงานที่ใช้สะสม: `{total_kwh_day_sum:.2f} หน่วย / วัน`")
     with sum_col2:
-        st.info(f"🌙 **ตอนกลางคืน:** \n- กำลังไฟฟ้ารวม: `{total_w_night:,} วัตต์` \n- พลังงานที่ใช้: `{total_kwh_night_sum:.2f} หน่วย / วัน`")
+        st.info(f"🌙 **ตอนกลางคืน:** \n- กำลังไฟฟ้ารวมอุปกรณ์ที่เปิด: `{total_w_night:,} วัตต์` \n- พลังงานที่ใช้สะสม: `{total_kwh_night_sum:.2f} หน่วย / วัน`")
     with sum_col3:
-        st.success(f"🔋 **รวมทั้งวัน:** \n- พลังงานรวมสุทธิ: `{total_kwh_all_day:.2f} หน่วย / วัน` \n- คิดเป็นโหลดเฉลี่ย: `{(total_wh_day_sum+total_wh_night_sum):,} Wh/วัน`")
+        st.success(f"🔋 **รวมทั้งวัน:** \n- พลังงานรวมสุทธิ: `{total_kwh_all_day:.2f} หน่วย / วัน` \n- พลังงานรวมรายวันสะสม: `{total_wh_day_sum + total_wh_night_sum:,} Wh/วัน`")
                 
     st.markdown("---")
     if st.button("🗑️ ล้างรายการทั้งหมด", type="secondary"):
@@ -186,7 +187,6 @@ if calc_btn:
 # ----------------- 3. ส่วนประมวลผลและการแสดงผล Dashboard -----------------
 st.subheader("3. รายงานการวิเคราะห์และดึงราคาขายระบบ (Dashboard)")
 
-# ตั้งค่าฟอนต์เริ่มต้นเมื่อเปิดมาครั้งแรก (ยังไม่กดคำนวณ)
 kw_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 kw_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 model_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
@@ -213,7 +213,6 @@ if st.session_state.calculated and st.session_state.load_items:
     kw_ongrid_needed = kwh_day / (peak_sun_hours * sys_efficiency)
     kw_hybrid_needed = total_kwh_day / (peak_sun_hours * sys_efficiency)
     
-    # ✨ ปรับตัวเลขผลลัพธ์หลักให้ ตัวหนา ใหญ่ และมีสีสันสวยงามแยกประเภทระบบ
     kw_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{kw_ongrid_needed:.3f} kW</span>"
     kw_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{kw_hybrid_needed:.3f} kW</span>"
 
