@@ -108,7 +108,6 @@ with st.form("add_appliance_form"):
 if st.session_state.load_items:
     st.markdown("#### 📋 รายการเครื่องใช้ไฟฟ้าที่เลือกไว้")
     
-    # ตัวแปรสำหรับคำนวณผลรวมโหลดเพื่อนำมาสรุปหน้าตาราง
     total_w_day = 0
     total_w_night = 0
     total_wh_day_sum = 0
@@ -128,7 +127,6 @@ if st.session_state.load_items:
                 st.session_state.calculated = False
                 st.rerun()
 
-        # สะสมค่าพลังงานและวัตต์รวม (คิดตามจำนวนเครื่องและชั่วโมงที่ระบุจริง)
         if item['ใช้งานกลางวัน (ชม.)'] > 0:
             total_w_day += (item['กำลังไฟฟ้า (วัตต์)'] * item['จำนวน (เครื่อง)'])
         if item['ใช้งานกลางคืน (ชม.)'] > 0:
@@ -137,12 +135,10 @@ if st.session_state.load_items:
         total_wh_day_sum += item['พลังงานกลางวัน (Wh)']
         total_wh_night_sum += item['พลังงานกลางคืน (Wh)']
 
-    # แปลงหน่วยพลังงานจาก Wh เป็น kWh (หน่วย)
     total_kwh_day_sum = total_wh_day_sum / 1000
     total_kwh_night_sum = total_wh_night_sum / 1000
     total_kwh_all_day = total_kwh_day_sum + total_kwh_night_sum
 
-    # ✨ ส่วนสรุปกำลังไฟฟ้าสะสมแยกช่วงเวลาตามที่ต้องการ
     st.markdown("##### 📊 สรุปกำลังไฟฟ้าที่เลือกใช้งานรวมทั้งหมด")
     sum_col1, sum_col2, sum_col3 = st.columns(3)
     with sum_col1:
@@ -190,18 +186,20 @@ if calc_btn:
 # ----------------- 3. ส่วนประมวลผลและการแสดงผล Dashboard -----------------
 st.subheader("3. รายงานการวิเคราะห์และดึงราคาขายระบบ (Dashboard)")
 
-kw_ongrid_needed_str = "---"
-kw_hybrid_needed_str = "---"
-model_ongrid = "---"
-model_hybrid = "---"
+# ตั้งค่าฟอนต์เริ่มต้นเมื่อเปิดมาครั้งแรก (ยังไม่กดคำนวณ)
+kw_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
+kw_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
+model_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
+model_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
+
 gen_ongrid_month_str = "---"
 gen_hybrid_month_str = "---"
 save_ongrid_month_str = "---"
 save_hybrid_month_str = "---"
 price_ongrid_str = "---"
 price_hybrid_str = "---"
-payback_ongrid_str = "---"
-payback_hybrid_str = "---"
+payback_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
+payback_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 
 if st.session_state.calculated and st.session_state.load_items:
     df_load = pd.DataFrame(st.session_state.load_items)
@@ -215,11 +213,15 @@ if st.session_state.calculated and st.session_state.load_items:
     kw_ongrid_needed = kwh_day / (peak_sun_hours * sys_efficiency)
     kw_hybrid_needed = total_kwh_day / (peak_sun_hours * sys_efficiency)
     
-    kw_ongrid_needed_str = f"{kw_ongrid_needed:.3f} kW"
-    kw_hybrid_needed_str = f"{kw_hybrid_needed:.3f} kW"
+    # ✨ ปรับตัวเลขผลลัพธ์หลักให้ ตัวหนา ใหญ่ และมีสีสันสวยงามแยกประเภทระบบ
+    kw_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{kw_ongrid_needed:.3f} kW</span>"
+    kw_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{kw_hybrid_needed:.3f} kW</span>"
 
     model_ongrid = get_recommended_model(kw_ongrid_needed, phase)
     model_hybrid = get_recommended_model(kw_hybrid_needed, phase)
+    
+    model_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{model_ongrid}</span>"
+    model_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{model_hybrid}</span>"
 
     gen_ongrid_month = kw_ongrid_needed * peak_sun_hours * sys_efficiency * DAYS_PER_MONTH
     gen_hybrid_month = kw_hybrid_needed * peak_sun_hours * sys_efficiency * DAYS_PER_MONTH
@@ -258,35 +260,41 @@ if st.session_state.calculated and st.session_state.load_items:
 
     if price_ongrid > 0 and save_ongrid_month > 0:
         payback_ongrid = price_ongrid / (save_ongrid_month * 12)
-        payback_ongrid_str = f"{payback_ongrid:.2f} ปี"
+        payback_ongrid_html = f"<span style='font-size:24px; font-weight:bold; color:#E65100;'>🔥 {payback_ongrid:.2f} ปี</span>"
     else:
-        payback_ongrid_str = "สอบถามราคา / ไม่มีข้อมูลราคา"
+        payback_ongrid_html = "<span style='font-size:16px; color:#c62828;'>สอบถามราคาพิเศษ</span>"
 
     if price_hybrid > 0 and save_hybrid_month > 0:
         payback_hybrid = price_hybrid / (save_hybrid_month * 12)
-        payback_hybrid_str = f"{payback_hybrid:.2f} ปี"
+        payback_hybrid_html = f"<span style='font-size:24px; font-weight:bold; color:#E65100;'>🔥 {payback_hybrid:.2f} ปี</span>"
     else:
-        payback_hybrid_str = "สอบถามราคา / ไม่มีข้อมูลราคา"
+        payback_hybrid_html = "<span style='font-size:16px; color:#c62828;'>สอบถามราคาพิเศษ</span>"
 
 dash_col1, dash_col2 = st.columns(2)
 with dash_col1:
     st.info("💡 **ระบบ On-Grid (เน้นประหยัดกลางวัน)**")
-    st.markdown(f"- A. ขนาดกำลังผลิตคํานวณจริงขั้นต่ำ: **{kw_ongrid_needed_str}**")
-    st.markdown(f"- B. ขนาดรุ่นของระบบที่แนะนำขาย: **{model_ongrid}**")
+    st.write(f"- A. ขนาดกำลังผลิตคํานวณจริงขั้นต่ำ: ", unsafe_allow_html=True)
+    st.markdown(kw_ongrid_html, unsafe_allow_html=True)
+    st.write(f"- B. ขนาดรุ่นของระบบที่แนะนำขาย: ", unsafe_allow_html=True)
+    st.markdown(model_ongrid_html, unsafe_allow_html=True)
     st.markdown(f"- **ปริมาณไฟฟ้าที่คาดว่าผลิตได้จริง:** `{gen_ongrid_month_str}`")
     st.markdown(f"- **มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_ongrid_month_str}`")
     st.markdown(f"- **ราคาขายสุทธิของระบบ:** ` {price_ongrid_str} `")
-    st.markdown(f"- **<span style='color:#FF5733'>ระยะเวลาคืนทุนโดยประมาณ:</span>** 🔥 **{payback_ongrid_str}**", unsafe_allow_html=True)
+    st.write(f"- **ระยะเวลาคืนทุนโดยประมาณ:**")
+    st.markdown(payback_ongrid_html, unsafe_allow_html=True)
 
 with dash_col2:
     st.success("🔋 **ระบบ Hybrid - HW (กลางวัน + กลางคืน)**")
-    st.markdown(f"- A. ขนาดกำลังผลิตคํานวณจริงขั้นต่ำ: **{kw_hybrid_needed_str}**")
-    st.markdown(f"- B. ขนาดรุ่นของระบบที่แนะนำขาย: **{model_hybrid}**")
+    st.write(f"- A. ขนาดกำลังผลิตคํานวณจริงขั้นต่ำ: ", unsafe_allow_html=True)
+    st.markdown(kw_hybrid_html, unsafe_allow_html=True)
+    st.write(f"- B. ขนาดรุ่นของระบบที่แนะนำขาย: ", unsafe_allow_html=True)
+    st.markdown(model_hybrid_html, unsafe_allow_html=True)
     st.markdown(f"- _ตัวเลือกขนาดแบตเตอรี่ที่ระบุ:_ *{battery_option if st.session_state.calculated else '---'}*")
     st.markdown(f"- **ปริมาณไฟฟ้าที่คาดว่าผลิตได้จริง:** `{gen_hybrid_month_str}`")
     st.markdown(f"- **มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_hybrid_month_str}` *(รวมมูลค่าเพิ่มจากแบตแล้ว)*")
     st.markdown(f"- **ราคาขายสุทธิของระบบ:** ` {price_hybrid_str} `")
-    st.markdown(f"- **<span style='color:#FF5733'>ระยะเวลาคืนทุนโดยประมาณ:</span>** 🔥 **{payback_hybrid_str}**", unsafe_allow_html=True)
+    st.write(f"- **ระยะเวลาคืนทุนโดยประมาณ:**")
+    st.markdown(payback_hybrid_html, unsafe_allow_html=True)
 
 st.markdown("---")
 
