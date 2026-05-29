@@ -118,7 +118,7 @@ if st.session_state.load_items:
         with col_detail:
             st.write(f"{item['จำนวน (เครื่อง)']} เครื่อง | กลางวัน {item['ใช้งานกลางวัน (ชม.)']} ชม. | กลางคืน {item['ใช้งานกลางคืน (ชม.)']} ชม. ({item['รวมต่อวัน (หน่วย หรือ kWh)']:.2f} หน่วย/วัน)")
         with col_del:
-            if st.button(f"❌ ลบชิ้นนี้", key=f"del_{index}"):
+            if st.button(f"❌ ลบรายการนี้", key=f"del_{index}"):
                 st.session_state.load_items.pop(index)
                 st.session_state.calculated = False
                 st.rerun()
