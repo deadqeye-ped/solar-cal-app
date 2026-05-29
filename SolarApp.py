@@ -258,7 +258,7 @@ with dash_col2:
     st.markdown(f"- B. ขนาดรุ่นของระบบที่แนะนำขาย: **{model_hybrid}**")
     st.markdown(f"- _ตัวเลือกขนาดแบตเตอรี่ที่ระบุ:_ *{battery_option if st.session_state.calculated else '---'}*")
     st.markdown(f"- **ปริมาณไฟฟ้าที่คาดว่าผลิตได้จริง:** `{gen_hybrid_month_str}`")
-    st.markdown(f"- **¼ มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_hybrid_month_str}` *(รวมมูลค่าเพิ่มจากแบตแล้ว)*")
+    st.markdown(f"- **มูลค่าไฟฟ้าที่ประหยัดได้ต่อเดือน:** `{save_hybrid_month_str}` *(รวมมูลค่าเพิ่มจากแบตแล้ว)*")
     st.markdown(f"- **ราคาขายสุทธิของระบบ:** ` {price_hybrid_str} `")
     st.markdown(f"- **<span style='color:#FF5733'>ระยะเวลาคืนทุนโดยประมาณ:</span>** 🔥 **{payback_hybrid_str}**", unsafe_allow_html=True)
 
