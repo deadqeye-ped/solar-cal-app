@@ -5,7 +5,9 @@ import math
 # ตั้งค่าหน้าเว็บให้เป็นแนวกว้างและเปลี่ยนไอคอนแท็บ
 st.set_page_config(page_title="Solar Cell Calculator", layout="wide", page_icon="☀️")
 
-# ----------------- 1. ข้อมูลอ้างอิงและตั้งราคาเริ่มต้น (Session State) -----------------
+# =========================================================================
+# 1. ส่วนข้อมูลอ้างอิงและตั้งราคาระบบเริ่มต้น (Session State)
+# =========================================================================
 
 # รายการเครื่องใช้ไฟฟ้าและกำลังวัตต์มาตรฐาน (ล็อกค่าให้เลือกตามนี้เท่านั้น)
 APPLIANCES = {
@@ -28,13 +30,14 @@ APPLIANCES = {
     "หม้อหุงข้าวไฟฟ้า": 600
 }
 
-# กำหนดรากฐานราคาระบบดั้งเดิม
+# กำหนดรากฐานราคาระบบ On-Grid ดั้งเดิมลงในระบบจำค่า
 if 'ongrid_prices' not in st.session_state:
     st.session_state.ongrid_prices = {
         "3k 1p": 99000.0, "5k 1p": 149000.0, "10k 1p": 0.0, "15k 1p": 0.0,
         "5k 3p": 169000.0, "10k 3p": 249000.0, "15k 3p": 289000.0, "20k 3p": 389000.0
     }
 
+# กำหนดรากฐานราคาระบบ Hybrid ดั้งเดิมลงในระบบจำค่า
 if 'hybrid_prices' not in st.session_state:
     st.session_state.hybrid_prices = {
         "5k 1p": {"แบตเตอรี่มาตรฐาน 1 ลูก (7 kWh)": 299000.0, "เพิ่มแบต1 (รวมเป็น 2 ลูก / 14 kWh)": 0.0, "เพิ่มแบต2 (รวมเป็น 3 ลูก / 21 kWh)": 0.0},
@@ -46,7 +49,7 @@ if 'hybrid_prices' not in st.session_state:
         "20k 3p": {"แบตเตอรี่มาตรฐาน 1 ลูก (7 kWh)": 629000.0, "เพิ่มแบต1 (รวมเป็น 2 ลูก / 14 kWh)": 692000.0, "เพิ่มแบต2 (รวมเป็น 3 ลูก / 21 kWh)": 755000.0}
     }
 
-# ฟังก์ชันสำหรับเลือกขนาดรุ่นอินเวอร์เตอร์ที่เหมาะสม (kW)
+# ฟังก์ชันวิศวกรรมสำหรับเลือกขนาดรุ่นอินเวอร์เตอร์ที่เหมาะสม (kW)
 def get_recommended_model(kw_needed, phase_str):
     p_suffix = "1p" if "1 Phase" in phase_str else "3p"
     if kw_needed <= 3 and p_suffix == "1p": return f"3k {p_suffix}"
@@ -56,14 +59,19 @@ def get_recommended_model(kw_needed, phase_str):
     elif kw_needed <= 20: return f"20k {p_suffix}"
     else: return f"เกินขนาด 20k {p_suffix}"
 
-# ล็อกวันต่อเดือนเป็นค่าคงที่ 30 วัน
+# ล็อกวันต่อเดือนเป็นค่าคงที่ 30 วันตามเงื่อนไขบริษัท
 DAYS_PER_MONTH = 30
 
-# ----------------- 2. ออกแบบหน้าตาแอป (UI & Inputs) -----------------
+# =========================================================================
+# 2. ส่วนของหน้าตาแอปพลิเคชัน (UI & Inputs Layout)
+# =========================================================================
 
 st.title("☀️ ระบบวิเคราะห์ขนาดและคำนวณการลงทุน Solar Cell by WRC Energy ☀️")
 st.markdown("---")
 
+# -------------------------------------------------------------------------
+# หมวดที่ 1: โปรแกรมคำนวณโหลดไฟฟ้าแยกช่วงเวลา
+# -------------------------------------------------------------------------
 st.subheader("1. โปรแกรมคำนวณโหลดไฟฟ้าแยกช่วงเวลา")
 st.write("เลือกเครื่องใช้ไฟฟ้ามาตรฐานและใส่จำนวนเพื่อคำนวณหาปริมาณการใช้ไฟรวม")
 
@@ -105,6 +113,7 @@ with st.form("add_appliance_form"):
         })
         st.session_state.calculated = False
 
+# แสดงผลตารางรายการและกรอบสรุปโหลดไฟฟ้าคณิตศาสตร์คลีน ๆ
 if st.session_state.load_items:
     st.markdown("#### 📋 รายการเครื่องใช้ไฟฟ้าที่เลือกไว้")
     
@@ -139,9 +148,8 @@ if st.session_state.load_items:
     total_kwh_night_sum = total_wh_night_sum / 1000
     total_kwh_all_day = total_kwh_day_sum + total_kwh_night_sum
 
-    # 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า (เวอร์ชัน Clean สบายตา ไม่รก)
+    # แผงสรุป Connected Load และ พลังงานสะสม (Clean Version ไม่รก)
     st.markdown("##### 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า")
-    
     max_connected_load = max(total_w_day, total_w_night)
     st.metric(
         label="🔌 ขนาดกำลังไฟฟ้ารวมของอุปกรณ์ไฟฟ้าที่เปิดใช้งานพร้อมกันพีกสูงสุด (Connected Load)", 
@@ -168,6 +176,9 @@ else:
 
 st.markdown("---")
 
+# -------------------------------------------------------------------------
+# หมวดที่ 2: ตั้งค่าประเภทระบบไฟฟ้า
+# -------------------------------------------------------------------------
 st.subheader("2. ตั้งค่าประเภทระบบไฟฟ้า")
 col1, col2, col3 = st.columns(3)
 
@@ -186,6 +197,7 @@ with col3:
 
 st.markdown("---")
 
+# ปุ่มหลักสำหรับกดยืนยันการวิเคราะห์ Dashboard
 calc_btn = st.button("🔮 กดคำนวณผลลัพธ์ระบบ Solar Cell", type="primary", use_container_width=True)
 if calc_btn:
     if not st.session_state.load_items:
@@ -193,9 +205,12 @@ if calc_btn:
     else:
         st.session_state.calculated = True
 
-# ----------------- 3. ส่วนประมวลผลและการแสดงผล Dashboard -----------------
+# =========================================================================
+# 3. ส่วนประมวลผลวิศวกรรมและการแสดงผล Dashboard สรุปเงินลงทุน
+# =========================================================================
 st.subheader("3. รายงานการวิเคราะห์และดึงราคาขายระบบ (Dashboard)")
 
+# ตั้งค่าการแสดงผลแบบมีขีดประเมื่อเปิดหน้าแอปครั้งแรก
 kw_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 kw_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 model_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
@@ -210,6 +225,7 @@ price_hybrid_str = "---"
 payback_ongrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 payback_hybrid_html = "<span style='font-size:20px; font-weight:bold; color:#666666;'>---</span>"
 
+# รันสมการสูตรคณิตศาสตร์จริงเมื่อผู้ใช้คลิกปุ่มคำนวณ
 if st.session_state.calculated and st.session_state.load_items:
     df_load = pd.DataFrame(st.session_state.load_items)
     
@@ -222,6 +238,7 @@ if st.session_state.calculated and st.session_state.load_items:
     kw_ongrid_needed = kwh_day / (peak_sun_hours * sys_efficiency)
     kw_hybrid_needed = total_kwh_day / (peak_sun_hours * sys_efficiency)
     
+    # ปรับสไตล์ตัวเลขหน้า Dashboard ให้ หนา ใหญ่ และแยกธีมสีสวยงามชัดเจน
     kw_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{kw_ongrid_needed:.3f} kW</span>"
     kw_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{kw_hybrid_needed:.3f} kW</span>"
 
@@ -240,6 +257,7 @@ if st.session_state.calculated and st.session_state.load_items:
     save_ongrid_month = gen_ongrid_month * cost_per_unit
     save_hybrid_month_base = gen_hybrid_month * cost_per_unit
     
+    # ตรรกะบวกโบนัสมูลค่าประหยัดตามขนาดแบตเตอรี่ความจุ Hybrid (+1000, +2000, +3000)
     bonus_saving = 0.0
     if battery_option == "แบตเตอรี่มาตรฐาน 1 ลูก (7 kWh)":
         bonus_saving = 1000.0
@@ -253,6 +271,7 @@ if st.session_state.calculated and st.session_state.load_items:
     save_ongrid_month_str = f"{save_ongrid_month:,.2f} บาท / เดือน"
     save_hybrid_month_str = f"{save_hybrid_month:,.2f} บาท / เดือน"
 
+    # ดึงข้อมูลจาก Session ราคากลางที่ทีมขายพิมพ์แก้ไขปรับแต่งได้
     price_ongrid = st.session_state.ongrid_prices.get(model_ongrid, 0.0)
     price_hybrid = st.session_state.hybrid_prices.get(model_hybrid, {}).get(battery_option, 0.0)
     
@@ -278,6 +297,7 @@ if st.session_state.calculated and st.session_state.load_items:
     else:
         payback_hybrid_html = "<span style='font-size:16px; color:#c62828;'>สอบถามราคาพิเศษ</span>"
 
+# แสดงกล่องรายงานผลสองฝั่งประกบคู่เพื่อเปรียบเทียบปิดการขาย
 dash_col1, dash_col2 = st.columns(2)
 with dash_col1:
     st.info("💡 **ระบบ On-Grid (เน้นประหยัดกลางวัน)**")
@@ -306,7 +326,9 @@ with dash_col2:
 
 st.markdown("---")
 
-# ----------------- 4. หมวดจัดการราคากลาง (Price List Management) -----------------
+# -------------------------------------------------------------------------
+# หมวดที่ 4: ตารางจัดการราคากลางหน้างาน (พับเก็บและซ่อนไว้เริ่มต้น)
+# -------------------------------------------------------------------------
 with st.expander("⚙️ 4. ตารางจัดการราคาขายระบบและการปรับปรุงราคา (Price List Management) - คลิกเพื่อเปิด/ปิด", expanded=False):
     st.write("แก้ไขปรับราคาขายของแต่ละรุ่นตรงช่องด้านล่างนี้")
     
