@@ -14,7 +14,7 @@ APPLIANCES = {
     "เครื่องปรับอากาศ 24,000 BTU": 2000,
     "ตู้เย็น 10-15 คิว": 150,
     "ตู้เย็นขนาดใหญ่/Side-by-Side": 300,
-    "ทีวี LED 55-65 นิ้ว": 120,
+    "ทีทีวี LED 55-65 นิ้ว": 120,
     "เครื่องซักผ้า (ฝาบน/ฝาหน้า)": 500,
     "เครื่องอบผ้า": 2500,
     "ไมโครเวฟ": 1200,
@@ -139,7 +139,6 @@ if st.session_state.load_items:
     total_kwh_night_sum = total_wh_night_sum / 1000
     total_kwh_all_day = total_kwh_day_sum + total_kwh_night_sum
 
-    # 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า
     st.markdown("##### 📊 สรุปภาพรวมภาระโหลดไฟฟ้าของบ้านลูกค้า")
     
     max_connected_load = max(total_w_day, total_w_night)
@@ -223,18 +222,18 @@ if st.session_state.calculated and st.session_state.load_items:
     kw_ongrid_needed = kwh_day / (peak_sun_hours * sys_efficiency)
     kw_hybrid_needed = total_kwh_day / (peak_sun_hours * sys_efficiency)
     
-    # ✨ [จุดแก้ไขแก้ไขความถูกต้องของสี] ✨
-    # ฝั่ง On-Grid คุมโทนสีเขียวเด่นชัด (#2E7D32) ทั้งค่า kW และ ตัวรุ่นโมเดล
-    kw_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{kw_ongrid_needed:.3f} kW</span>"
-    # ฝั่ง Hybrid คุมโทนสีน้ำเงิน/ฟ้า พรีเมียมเทคโนโลยี (#1565C0) ทั้งค่า kW และ ตัวรุ่นโมเดล
-    kw_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{kw_hybrid_needed:.3f} kW</span>"
+    # 🎨 [จุดแก้ไขสลับรหัสสีให้ตรงกล่องแอปหลัก] 🎨
+    # ฝั่งซ้าย On-Grid (กล่องสีฟ้า/น้ำเงิน) -> ใช้รหัสสี #1565C0 
+    kw_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{kw_ongrid_needed:.3f} kW</span>"
+    # ฝั่งขวา Hybrid (กล่องสีเขียวเหนี่ยวทรัพย์) -> ใช้รหัสสี #2E7D32
+    kw_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{kw_hybrid_needed:.3f} kW</span>"
 
     model_ongrid = get_recommended_model(kw_ongrid_needed, phase)
     model_hybrid = get_recommended_model(kw_hybrid_needed, phase)
     
-    # สลับแก้ค่ารหัสสี HTML ของตัวโมเดลระบบให้แมตช์ตามกรอบ On-grid / Hybrid ถูกต้องร้อยเปอร์เซ็นต์
-    model_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{model_ongrid}</span>"
-    model_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{model_hybrid}</span>"
+    # ปรับแต่งรหัสสีตัวแนะนำรุ่นอินเวอร์เตอร์ให้แมตช์ตามโทนกล่องด้วยเช่นกัน
+    model_ongrid_html = f"<span style='font-size:22px; font-weight:bold; color:#1565C0;'>{model_ongrid}</span>"
+    model_hybrid_html = f"<span style='font-size:22px; font-weight:bold; color:#2E7D32;'>{model_hybrid}</span>"
 
     gen_ongrid_month = kw_ongrid_needed * peak_sun_hours * sys_efficiency * DAYS_PER_MONTH
     gen_hybrid_month = kw_hybrid_needed * peak_sun_hours * sys_efficiency * DAYS_PER_MONTH
