@@ -64,7 +64,6 @@ DAYS_PER_MONTH = 30
 st.title("☀️ ระบบวิเคราะห์ขนาดและคำนวณการลงทุน Solar Cell")
 st.markdown("---")
 
-# ✨ ข้อ 1 & 5: ย้ายโปรแกรมคำนวณโหลดไฟฟ้าขึ้นมาเป็นหัวข้อที่ 1 และล็อกช้อยส์การเลือก
 st.subheader("1. โปรแกรมคำนวณโหลดไฟฟ้าแยกช่วงเวลา")
 st.write("เลือกเครื่องใช้ไฟฟ้ามาตรฐานและใส่จำนวนเพื่อคำนวณหาปริมาณการใช้ไฟรวม")
 
@@ -76,7 +75,6 @@ if 'calculated' not in st.session_state:
 with st.form("add_appliance_form"):
     c_app, c_num, c_day, c_night = st.columns([3, 1, 1, 1])
     with c_app:
-        # บังคับเลือกจาก List เท่านั้น ไม่มีพิมพ์กล่องอิสระ
         selected_app = st.selectbox("เลือกเครื่องใช้ไฟฟ้า", ["-- เลือกเครื่องใช้ไฟฟ้า --"] + list(APPLIANCES.keys()))
     with c_num:
         num_units = st.number_input("จำนวน (เครื่อง)", min_value=1, value=1)
@@ -109,6 +107,13 @@ with st.form("add_appliance_form"):
 
 if st.session_state.load_items:
     st.markdown("#### 📋 รายการเครื่องใช้ไฟฟ้าที่เลือกไว้")
+    
+    # ตัวแปรสำหรับคำนวณผลรวมโหลดเพื่อนำมาสรุปหน้าตาราง
+    total_w_day = 0
+    total_w_night = 0
+    total_wh_day_sum = 0
+    total_wh_night_sum = 0
+
     for index, item in enumerate(st.session_state.load_items):
         col_idx, col_name, col_detail, col_del = st.columns([1, 4, 6, 2])
         with col_idx:
@@ -122,6 +127,30 @@ if st.session_state.load_items:
                 st.session_state.load_items.pop(index)
                 st.session_state.calculated = False
                 st.rerun()
+
+        # สะสมค่าพลังงานและวัตต์รวม (คิดตามจำนวนเครื่องและชั่วโมงที่ระบุจริง)
+        if item['ใช้งานกลางวัน (ชม.)'] > 0:
+            total_w_day += (item['กำลังไฟฟ้า (วัตต์)'] * item['จำนวน (เครื่อง)'])
+        if item['ใช้งานกลางคืน (ชม.)'] > 0:
+            total_w_night += (item['กำลังไฟฟ้า (วัตต์)'] * item['จำนวน (เครื่อง)'])
+            
+        total_wh_day_sum += item['พลังงานกลางวัน (Wh)']
+        total_wh_night_sum += item['พลังงานกลางคืน (Wh)']
+
+    # แปลงหน่วยพลังงานจาก Wh เป็น kWh (หน่วย)
+    total_kwh_day_sum = total_wh_day_sum / 1000
+    total_kwh_night_sum = total_wh_night_sum / 1000
+    total_kwh_all_day = total_kwh_day_sum + total_kwh_night_sum
+
+    # ✨ ส่วนสรุปกำลังไฟฟ้าสะสมแยกช่วงเวลาตามที่ต้องการ
+    st.markdown("##### 📊 สรุปกำลังไฟฟ้าที่เลือกใช้งานรวมทั้งหมด")
+    sum_col1, sum_col2, sum_col3 = st.columns(3)
+    with sum_col1:
+        st.warning(f"☀️ **ตอนกลางวัน:** \n- กำลังไฟฟ้ารวม: `{total_w_day:,} วัตต์` \n- พลังงานที่ใช้: `{total_kwh_day_sum:.2f} หน่วย / วัน`")
+    with sum_col2:
+        st.info(f"🌙 **ตอนกลางคืน:** \n- กำลังไฟฟ้ารวม: `{total_w_night:,} วัตต์` \n- พลังงานที่ใช้: `{total_kwh_night_sum:.2f} หน่วย / วัน`")
+    with sum_col3:
+        st.success(f"🔋 **รวมทั้งวัน:** \n- พลังงานรวมสุทธิ: `{total_kwh_all_day:.2f} หน่วย / วัน` \n- คิดเป็นโหลดเฉลี่ย: `{(total_wh_day_sum+total_wh_night_sum):,} Wh/วัน`")
                 
     st.markdown("---")
     if st.button("🗑️ ล้างรายการทั้งหมด", type="secondary"):
@@ -133,7 +162,6 @@ else:
 
 st.markdown("---")
 
-# ✨ ข้อ 1 & 4: เปลี่ยนหัวข้อตั้งค่าตัวแปรมาเป็นข้อ 2 และนำช่อง "จำนวนวันต่อเดือน" ออกไป
 st.subheader("2. ตั้งค่าประเภทระบบไฟฟ้าและตัวแปรของบ้าน")
 col1, col2, col3 = st.columns(3)
 
@@ -193,7 +221,6 @@ if st.session_state.calculated and st.session_state.load_items:
     model_ongrid = get_recommended_model(kw_ongrid_needed, phase)
     model_hybrid = get_recommended_model(kw_hybrid_needed, phase)
 
-    # อิงค่าคงที่ DAYS_PER_MONTH = 30 วันตามข้อที่ 4
     gen_ongrid_month = kw_ongrid_needed * peak_sun_hours * sys_efficiency * DAYS_PER_MONTH
     gen_hybrid_month = kw_hybrid_needed * peak_sun_hours * sys_efficiency * DAYS_PER_MONTH
     
@@ -203,7 +230,6 @@ if st.session_state.calculated and st.session_state.load_items:
     save_ongrid_month = gen_ongrid_month * cost_per_unit
     save_hybrid_month_base = gen_hybrid_month * cost_per_unit
     
-    # ✨ ข้อ 3: เงื่อนไขเปลี่ยนเป็น "เพิ่มมูลค่าการประหยัด" ตามความจุของแบตเตอรี่ Hybrid (+1000, +2000, +3000)
     bonus_saving = 0.0
     if battery_option == "แบตเตอรี่มาตรฐาน 1 ลูก (7 kWh)":
         bonus_saving = 1000.0
@@ -264,7 +290,7 @@ with dash_col2:
 
 st.markdown("---")
 
-# ----------------- ✨ ข้อ 2: ใช้ st.expander ซ่อนหมวดจัดการราคากลางไว้ก่อน กดแล้วค่อยเด้งเปิด -----------------
+# ----------------- 4. หมวดจัดการราคากลาง (Price List Management) -----------------
 with st.expander("⚙️ 4. ตารางจัดการราคาขายระบบและการปรับปรุงราคา (Price List Management) - คลิกเพื่อเปิด/ปิด", expanded=False):
     st.write("แก้ไขปรับราคาขายของแต่ละรุ่นตรงช่องด้านล่างนี้")
     
