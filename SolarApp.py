@@ -158,7 +158,7 @@ else:
 
 st.markdown("---")
 
-st.subheader("2. ตั้งค่าประเภทระบบไฟฟ้าและตัวแปรของบ้าน")
+st.subheader("2. ตั้งค่าประเภทระบบไฟฟ้า")
 col1, col2, col3 = st.columns(3)
 
 with col1:
